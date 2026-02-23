@@ -8,7 +8,7 @@ const alertVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-background text-foreground",
+        default: "",
         destructive:
           "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
       },
@@ -19,18 +19,25 @@ const alertVariants = cva(
   }
 )
 
-const Alert = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof alertVariants>
->(({ className, variant, ...props }, ref) => (
-  <div
-    ref={ref}
-    role="alert"
-    className={cn(alertVariants({ variant }), className)}
-    {...props}
-  />
-))
-Alert.displayName = "Alert"
+// Patch Alert component to use inline style for background and text color
+type AlertVariant = "default" | "destructive";
+const Alert = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & { variant?: AlertVariant }>(
+  ({ variant = "default", ...props }, ref) => (
+    <div
+      ref={ref}
+      {...props}
+      className={cn(alertVariants({ variant }), props.className)}
+      style={{
+        ...(variant === "default"
+          ? { backgroundColor: 'hsl(var(--background))', color: 'hsl(var(--foreground))' }
+          : {}),
+        ...props.style,
+      }}
+    />
+  )
+);
+Alert.displayName = "Alert";
+export { Alert };
 
 const AlertTitle = React.forwardRef<
   HTMLParagraphElement,

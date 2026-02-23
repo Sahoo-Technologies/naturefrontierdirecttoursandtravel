@@ -1,10 +1,20 @@
 import express, { type Request, Response, NextFunction } from "express";
+import * as Sentry from "@sentry/node";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { initializeEmailTransporter } from "./email";
 
+// Sentry monitoring setup
+Sentry.init({
+  dsn: process.env.SENTRY_DSN || "",
+  environment: process.env.NODE_ENV || "development",
+  tracesSampleRate: 1.0,
+});
+
 const app = express();
+// Sentry request handler (must be first middleware)
+app.use(Sentry.Handlers.requestHandler());
 const httpServer = createServer(app);
 
 declare module "http" {
@@ -66,6 +76,8 @@ app.use((req, res, next) => {
   
   await registerRoutes(httpServer, app);
 
+  // Sentry error handler (must be after all routes)
+  app.use(Sentry.Handlers.errorHandler());
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";

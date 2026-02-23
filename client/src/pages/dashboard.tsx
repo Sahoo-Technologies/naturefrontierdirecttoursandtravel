@@ -9,23 +9,44 @@ import { Store, Truck, Route, Target, TrendingUp, Clock, MapPin } from "lucide-r
 import type { Shop, Driver, Route as RouteType, Target as TargetType } from "@shared/schema";
 
 export default function Dashboard() {
-  const { data: shops = [], isLoading: shopsLoading } = useQuery<Shop[]>({
+  const {
+    data: shops = [],
+    isLoading: shopsLoading,
+    isError: shopsError,
+    error: shopsErrorObj
+  } = useQuery<Shop[]>({
     queryKey: ["/api/shops"],
   });
 
-  const { data: drivers = [], isLoading: driversLoading } = useQuery<Driver[]>({
+  const {
+    data: drivers = [],
+    isLoading: driversLoading,
+    isError: driversError,
+    error: driversErrorObj
+  } = useQuery<Driver[]>({
     queryKey: ["/api/drivers"],
   });
 
-  const { data: routes = [], isLoading: routesLoading } = useQuery<RouteType[]>({
+  const {
+    data: routes = [],
+    isLoading: routesLoading,
+    isError: routesError,
+    error: routesErrorObj
+  } = useQuery<RouteType[]>({
     queryKey: ["/api/routes"],
   });
 
-  const { data: targets = [], isLoading: targetsLoading } = useQuery<TargetType[]>({
+  const {
+    data: targets = [],
+    isLoading: targetsLoading,
+    isError: targetsError,
+    error: targetsErrorObj
+  } = useQuery<TargetType[]>({
     queryKey: ["/api/targets"],
   });
 
   const isLoading = shopsLoading || driversLoading || routesLoading || targetsLoading;
+  const isError = shopsError || driversError || routesError || targetsError;
 
   // Calculate statistics
   const activeShops = shops.filter(s => s.status === "active").length;
@@ -60,6 +81,18 @@ export default function Dashboard() {
           <Skeleton className="h-80" />
           <Skeleton className="h-80" />
         </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="text-red-500 text-sm font-medium">Error loading dashboard data.</div>
+        {shopsError && <div className="text-xs text-red-400">Shops: {String(shopsErrorObj)}</div>}
+        {driversError && <div className="text-xs text-red-400">Drivers: {String(driversErrorObj)}</div>}
+        {routesError && <div className="text-xs text-red-400">Routes: {String(routesErrorObj)}</div>}
+        {targetsError && <div className="text-xs text-red-400">Targets: {String(targetsErrorObj)}</div>}
       </div>
     );
   }

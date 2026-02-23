@@ -1,18 +1,12 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { StatCard } from "@/components/analytics/StatCard";
+import dynamic from "next/dynamic";
+const RouteOptimizer = dynamic(() => import("@/components/analytics/RouteOptimizer").then(mod => mod.RouteOptimizer), { ssr: false });
 import { 
   Brain, 
-  TrendingUp, 
-  Route, 
   Users, 
   Store, 
   Fuel, 
@@ -45,14 +39,7 @@ interface DashboardData {
   routesByStatus: { planned: number; inProgress: number; completed: number };
 }
 
-interface RouteOptimizationResult {
-  optimizedOrder: string[];
-  originalDistance: number;
-  optimizedDistance: number;
-  timeSaved: number;
-  fuelSaved: number;
-  suggestions: string[];
-}
+// ...existing code...
 
 interface DemandForecast {
   shopId: string;
@@ -84,33 +71,7 @@ interface AnalyticsReport {
   generatedAt: string;
 }
 
-function StatCard({ title, value, subtitle, icon: Icon, trend, testId }: { 
-  title: string; 
-  value: string | number; 
-  subtitle?: string; 
-  icon: React.ComponentType<{ className?: string }>;
-  trend?: "up" | "down" | "neutral";
-  testId?: string;
-}) {
-  return (
-    <Card data-testid={testId}>
-      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {subtitle && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            {trend === "up" && <TrendingUp className="h-3 w-3 text-green-500" />}
-            {trend === "down" && <TrendingUp className="h-3 w-3 text-red-500 rotate-180" />}
-            {subtitle}
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+// ...StatCard now imported from analytics/StatCard...
 
 function RouteOptimizer() {
   const [selectedRoute, setSelectedRoute] = useState<string>("");
@@ -118,83 +79,7 @@ function RouteOptimizer() {
   
   const { data: routes, isLoading: routesLoading } = useQuery<{ id: string; name: string; status: string }[]>({
     queryKey: ["/api/routes"],
-  });
-
-  const optimizeMutation = useMutation({
-    mutationFn: async (routeId: string) => {
-      const response = await apiRequest("POST", `/api/analytics/optimize-route/${routeId}`);
-      return response.json();
-    },
-    onSuccess: (data: RouteOptimizationResult) => {
-      toast({
-        title: "Route Optimized",
-        description: `Saved ${data.timeSaved} minutes and ${data.fuelSaved}L of fuel`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/route-optimizations"] });
-    },
-    onError: () => {
-      toast({ title: "Optimization Failed", variant: "destructive" });
-    },
-  });
-
-  const { data: optimizationHistory } = useQuery<RouteOptimizationResult[]>({
-    queryKey: ["/api/analytics/route-optimizations"],
-  });
-
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Route className="h-5 w-5" />
-            AI Route Optimization
-          </CardTitle>
-          <CardDescription>
-            Optimize delivery routes using AI to reduce travel time and fuel costs
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-4">
-            <Select value={selectedRoute} onValueChange={setSelectedRoute}>
-              <SelectTrigger className="w-64" data-testid="select-route">
-                <SelectValue placeholder="Select a route to optimize" />
-              </SelectTrigger>
-              <SelectContent>
-                {routesLoading ? (
-                  <SelectItem value="loading" disabled>Loading...</SelectItem>
-                ) : (
-                  routes?.map((route) => (
-                    <SelectItem key={route.id} value={route.id}>
-                      {route.name} ({route.status})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-            <Button
-              onClick={() => selectedRoute && optimizeMutation.mutate(selectedRoute)}
-              disabled={!selectedRoute || optimizeMutation.isPending}
-              data-testid="button-optimize-route"
-            >
-              {optimizeMutation.isPending ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Optimizing...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Optimize Route
-                </>
-              )}
-            </Button>
-          </div>
-
-          {optimizeMutation.data && (
-            <Card className="bg-muted/50">
-              <CardContent className="pt-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  <div>
+  // ...RouteOptimizer now imported from analytics/RouteOptimizer...
                     <p className="text-sm text-muted-foreground">Original Distance</p>
                     <p className="text-lg font-semibold">{optimizeMutation.data.originalDistance.toFixed(1)} km</p>
                   </div>
